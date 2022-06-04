@@ -28,6 +28,18 @@ migrate = Migrate(app, db)
 # ----------------------------------------------------------------------------#
 # Models.
 # ----------------------------------------------------------------------------#
+class State(db.Model):
+    __tablename__ = 'states'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    artists = db.relationship('Artist', backref='states', lazy=True)
+    venues = db.relationship('Venue', backref='states', lazy=True)
+
+
+venue_genres = db.Table('venue_genres',
+                         db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
+                         db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
+                         )
 
 
 class Venue(db.Model):
@@ -35,21 +47,14 @@ class Venue(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
+    city = db.Column(db.String)
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+    address = db.Column(db.String)
+    phone = db.Column(db.String)
+    image_link = db.Column(db.String)
+    facebook_link = db.Column(db.String)
     shows = db.relationship('Show', backref='venues', lazy=True)
-    # shows = db.relationship('Shows', secondary=venue_shows, backref=db.backref('venues', lazy=True))
-
-
-# venue_shows = db.Table('venue_shows',
-#     db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
-#     db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True),
-#     db.Column('past_show', db.Boolean, nullable=False)
-# )
+    genres = db.relationship('Genre', secondary=venue_genres, backref=db.backref('venues', lazy=True))
 
 
 artist_genres = db.Table('artist_genres',
@@ -58,20 +63,13 @@ artist_genres = db.Table('artist_genres',
                          )
 
 
-# artist_shows = db.Table('artist_shows',
-#     db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
-#     db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True),
-#     db.Column('past_show', db.Boolean, nullable=False)
-# )
-
-
 class Artist(db.Model):
     __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String)
-    state = db.Column(db.String)
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
     phone = db.Column(db.String)
     image_link = db.Column(db.String)
     facebook_link = db.Column(db.String)
@@ -80,7 +78,6 @@ class Artist(db.Model):
     seeking_description = db.Column(db.Text)
     shows = db.relationship('Show', backref='artists', lazy=True)
     genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
-    # shows = db.relationship('Show', secondary=artist_shows, backref=db.backref('artists', lazy=True))
 
 
 class Genre(db.Model):
