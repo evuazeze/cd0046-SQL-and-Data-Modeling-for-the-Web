@@ -39,16 +39,9 @@ class State(db.Model):
 
 
 venue_genres = db.Table('venue_genres',
-                        db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
-                        db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
-                        )
-
-
-shows = db.Table('shows',
-                 db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
-                 db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
-                 db.Column('start_time', db.DateTime, nullable=False)
-                 )
+                         db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
+                         db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
+                         )
 
 
 class Venue(db.Model):
@@ -65,7 +58,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String)
     facebook_link = db.Column(db.String)
-    artists = db.relationship('Artist', secondary=shows, backref=db.backref('venues', lazy=True))
+    shows = db.relationship('Show', backref='venues', lazy=True)
     genres = db.relationship('Genre', secondary=venue_genres, backref=db.backref('venues', lazy=True))
 
 
@@ -100,6 +93,20 @@ class Genre(db.Model):
     def __repr__(self):
         return f'<Genre id: {self.id}, name: {self.name} >'
 
+
+artist_shows = db.Table('artist_shows',
+                         db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
+                         db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True)
+                         )
+
+
+class Show(db.Model):
+    __tablename__ = 'shows'
+
+    id = db.Column(db.Integer, primary_key=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    artists = db.relationship('Artist', secondary=artist_shows, backref=db.backref('shows', lazy=True))
 
 # ----------------------------------------------------------------------------#
 # Filters.
