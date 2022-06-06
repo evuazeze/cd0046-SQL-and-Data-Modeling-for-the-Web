@@ -636,15 +636,15 @@ def create_show_submission():
     data = {}
 
     try:
-        artist = Artist.query.filter_by(id=request.form['artist_id']).first()
         venue = Venue.query.filter_by(id=request.form['venue_id']).first()
         start_time = request.form['start_time']
 
         show = Show(
-            artist_id=artist.id,
             venue_id=venue.id,
             start_time=start_time
         )
+
+        show.artists = [Artist.query.filter_by(id=request.form['artist_id']).first()]
 
         db.session.add(show)
         db.session.commit()
