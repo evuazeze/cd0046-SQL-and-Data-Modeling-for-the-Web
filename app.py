@@ -39,9 +39,16 @@ class State(db.Model):
 
 
 venue_genres = db.Table('venue_genres',
-                         db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
-                         db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
-                         )
+                        db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
+                        db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
+                        )
+
+
+shows = db.Table('shows',
+                 db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
+                 db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
+                 db.Column('start_time', db.DateTime, nullable=False)
+                 )
 
 
 class Venue(db.Model):
@@ -58,7 +65,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String)
     facebook_link = db.Column(db.String)
-    shows = db.relationship('Show', backref='venues', lazy=True)
+    artists = db.relationship('Artist', secondary=shows, backref=db.backref('venues', lazy=True))
     genres = db.relationship('Genre', secondary=venue_genres, backref=db.backref('venues', lazy=True))
 
 
@@ -81,7 +88,6 @@ class Artist(db.Model):
     website = db.Column(db.String)
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.Text)
-    shows = db.relationship('Show', backref='artists', lazy=True)
     genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
 
 
@@ -93,15 +99,6 @@ class Genre(db.Model):
 
     def __repr__(self):
         return f'<Genre id: {self.id}, name: {self.name} >'
-
-
-class Show(db.Model):
-    __tablename__ = 'shows'
-
-    id = db.Column(db.Integer, primary_key=True)
-    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
 
 
 # ----------------------------------------------------------------------------#
@@ -628,14 +625,39 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    error = False
+    data = {}
 
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    try:
+        artist = Artist.query.filter_by(id=request.form['artist_id']).first()
+        venue = Venue.query.filter_by(id=request.form['venue_id']).first()
+        start_time = request.form['start_time']
+
+        show = Show(
+            artist_id=artist.id,
+            venue_id=venue.id,
+            start_time=start_time
+        )
+
+        db.session.add(show)
+        db.session.commit()
+
+        data['id'] = show.id
+    except():
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        # on unsuccessful db insert, flash an error
+        flash('An error occurred. Show could not be listed.')
+        abort(500)
+    else:
+        # on successful db insert, flash success
+        flash('Show was successfully listed!')
+
     return render_template('pages/home.html')
 
 
