@@ -346,17 +346,6 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    # data = [{
-    #     "id": 4,
-    #     "name": "Guns N Petals",
-    # }, {
-    #     "id": 5,
-    #     "name": "Matt Quevedo",
-    # }, {
-    #     "id": 6,
-    #     "name": "The Wild Sax Band",
-    # }]
     data = Artist.query.with_entities(Artist.id, Artist.name).all()
     return render_template('pages/artists.html', artists=data)
 
@@ -537,7 +526,7 @@ def create_artist_submission():
         image_link = request.form['image_link']
         facebook_link = request.form['facebook_link']
         website_link = request.form['website_link']
-        seeking_venue = True if request.form['seeking_venue'] == 'y' else False
+        seeking_venue = True if 'seeking_venue' in request.form else False
         seeking_description = request.form['seeking_description']
 
         artist = Artist(
