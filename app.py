@@ -81,6 +81,7 @@ class Artist(db.Model):
     website = db.Column(db.String)
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.Text)
+    shows = db.relationship('Show', backref='artists', lazy=True)
     genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
 
 
@@ -94,10 +95,10 @@ class Genre(db.Model):
         return f'<Genre id: {self.id}, name: {self.name} >'
 
 
-artist_shows = db.Table('artist_shows',
-                         db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
-                         db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True)
-                         )
+# artist_shows = db.Table('artist_shows',
+#                          db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
+#                          db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True)
+#                          )
 
 
 class Show(db.Model):
@@ -105,20 +106,21 @@ class Show(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
-    artists = db.relationship('Artist', secondary=artist_shows, backref=db.backref('shows', lazy=True))
+    # artists = db.relationship('Artist', secondary=artist_shows, backref=db.backref('shows', lazy=True))
 
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-    date = dateutil.parser.parse(value)
+    # date = dateutil.parser.parse(value)
     if format == 'full':
         format = "EEEE MMMM, d, y 'at' h:mma"
     elif format == 'medium':
         format = "EE MM, dd, y h:mma"
-    return babel.dates.format_datetime(date, format, locale='en')
+    return babel.dates.format_datetime(value, format, locale='en')
 
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -572,43 +574,11 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
     # displays list of shows at /shows
-    # TODO: replace with real venues data.
-    data = [{
-        "venue_id": 1,
-        "venue_name": "The Musical Hop",
-        "artist_id": 4,
-        "artist_name": "Guns N Petals",
-        "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-        "start_time": "2019-05-21T21:30:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 5,
-        "artist_name": "Matt Quevedo",
-        "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-        "start_time": "2019-06-15T23:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-01T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-08T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-15T20:00:00.000Z"
-    }]
+    data = Show.query\
+        .join(Venue, Show.venue_id == Venue.id)\
+        .join(Artist, Show.artist_id == Artist.id)\
+        .with_entities(Venue.id.label('venue_id'), Venue.name.label('venue_name'), Artist.id.label('artist_id'), Artist.name.label('artist_name'), Artist.image_link.label('artist_image_link'), Show.start_time.label('start_time')).all()
+
     return render_template('pages/shows.html', shows=data)
 
 
@@ -626,14 +596,14 @@ def create_show_submission():
 
     try:
         venue = Venue.query.filter_by(id=request.form['venue_id']).first()
+        artist = Artist.query.filter_by(id=request.form['artist_id']).first()
         start_time = request.form['start_time']
 
         show = Show(
             venue_id=venue.id,
+            artist_id=artist.id,
             start_time=start_time
         )
-
-        show.artists = [Artist.query.filter_by(id=request.form['artist_id']).first()]
 
         db.session.add(show)
         db.session.commit()
