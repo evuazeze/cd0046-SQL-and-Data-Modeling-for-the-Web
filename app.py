@@ -281,7 +281,6 @@ def create_venue_submission():
     error = False
     data = {}
     try:
-        form = VenueForm()
         name = request.form['name']
         city = request.form['city']
         state = State.query.filter_by(name=request.form['state']).first()
@@ -290,7 +289,7 @@ def create_venue_submission():
         image_link = request.form['image_link']
         facebook_link = request.form['facebook_link']
         website_link = request.form['website_link']
-        seeking_talent = True if request.form['seeking_talent'] == 'y' else False
+        seeking_talent = True if 'seeking_talent' in request.form else False
         seeking_description = request.form['seeking_description']
 
         venue = Venue(
