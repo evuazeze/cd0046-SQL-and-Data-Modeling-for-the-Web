@@ -14,11 +14,14 @@ from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
+from sqlalchemy import func
+from sqlalchemy.orm import load_only
+
 from forms import *
 from models import *
 from schemas import *
 
-
+engine = db.engine
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
@@ -49,30 +52,10 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
-    return render_template('pages/venues.html', areas=data);
+    venues = db.session.query(Venue).join(State, Venue.state_id == State.id).distinct(Venue.id, Venue.city, State.name).all()
+    venue_thumbnail_schema = VenueThumbnailSchema(many=True)
+    dump_data = venue_thumbnail_schema.dump(venues)
+    return render_template('pages/venues.html', areas=dump_data);
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -95,7 +78,7 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
-    venue = db.session.query(Venue).join(State).join(Venue.genres).filter(Venue.id == venue_id).first()
+    venue = db.session.query(Venue).join(Venue.genres).filter(Venue.id == venue_id).first()
     venue_schema = VenueSchema()
     return render_template('pages/show_venue.html', venue=venue_schema.dump(venue))
 

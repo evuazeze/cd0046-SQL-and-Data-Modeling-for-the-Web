@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, pre_dump
 from models import *
 
 
@@ -40,3 +40,29 @@ class VenueSchema(Schema):
     upcoming_shows_count = fields.Function(lambda obj: len(obj.upcoming_shows))
 
 
+def partition(items, city, state, container_name):
+    print('partition: ', items)
+    return [x for x in [
+        {
+            city: index1,
+            state: index2,
+            container_name: [item for item in items if item.city == index1 and item.state == index2],
+        }
+        for index1 in set(item.city for item in items) for index2 in set(item.state for item in items) if len(container_name) > 0
+    ] if x['venues']]
+
+
+class VenueThumbnailSchema(Schema):
+    class Meta:
+        model = Venue
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    city = fields.Str()
+    state = fields.Function(lambda obj: obj['state'].name)
+    venues = fields.List(fields.Nested(VenueSchema()))
+
+    @pre_dump(pass_many=True)
+    def partition_venues(self, data, many):
+        return partition(data, 'city', 'state', 'venues')
