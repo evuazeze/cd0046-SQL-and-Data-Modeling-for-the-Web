@@ -52,10 +52,10 @@ def index():
 
 @app.route('/venues')
 def venues():
-    venues = db.session.query(Venue).join(State, Venue.state_id == State.id).distinct(Venue.id, Venue.city, State.name).all()
-    venue_thumbnail_schema = VenueThumbnailSchema(many=True)
-    dump_data = venue_thumbnail_schema.dump(venues)
-    return render_template('pages/venues.html', areas=dump_data);
+    grouped_venues = db.session.query(Venue).join(State, Venue.state_id == State.id).distinct(Venue.id, Venue.city, State.name).all()
+    venue_grouper_schema = VenueGrouperSchema(many=True)
+    x = venue_grouper_schema.dump(grouped_venues)
+    return render_template('pages/venues.html', areas=x)
 
 
 @app.route('/venues/search', methods=['POST'])

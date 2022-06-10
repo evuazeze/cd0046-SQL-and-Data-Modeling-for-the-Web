@@ -40,19 +40,30 @@ class VenueSchema(Schema):
     upcoming_shows_count = fields.Function(lambda obj: len(obj.upcoming_shows))
 
 
-def partition(items, city, state, container_name):
-    print('partition: ', items)
-    return [x for x in [
-        {
-            city: index1,
-            state: index2,
-            container_name: [item for item in items if item.city == index1 and item.state == index2],
-        }
-        for index1 in set(item.city for item in items) for index2 in set(item.state for item in items) if len(container_name) > 0
-    ] if x['venues']]
-
-
 class VenueThumbnailSchema(Schema):
+    class Meta:
+        model = Venue
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    id = fields.Integer()
+    name = fields.Str()
+    num_upcoming_shows = fields.Function(lambda obj: len(obj.upcoming_shows))
+
+
+def partition(items, city, state, container_name):
+    return [
+        {
+            city: grouper[0],
+            state: grouper[1],
+            container_name: [item for item in items if item.city == grouper[0] and item.state == grouper[1]],
+        }
+        for grouper in set((item.city, item.state) for item in items)
+    ]
+
+
+class VenueGrouperSchema(Schema):
     class Meta:
         model = Venue
         include_relationships = True
@@ -61,7 +72,7 @@ class VenueThumbnailSchema(Schema):
 
     city = fields.Str()
     state = fields.Function(lambda obj: obj['state'].name)
-    venues = fields.List(fields.Nested(VenueSchema()))
+    venues = fields.List(fields.Nested(VenueThumbnailSchema()))
 
     @pre_dump(pass_many=True)
     def partition_venues(self, data, many):
