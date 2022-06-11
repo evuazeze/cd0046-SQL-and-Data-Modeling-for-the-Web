@@ -13,7 +13,6 @@ from logging import Formatter, FileHandler
 from forms import *
 from schemas import *
 
-engine = db.engine
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
