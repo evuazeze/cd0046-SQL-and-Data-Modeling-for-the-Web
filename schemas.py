@@ -52,7 +52,7 @@ class VenueThumbnailSchema(Schema):
     num_upcoming_shows = fields.Function(lambda obj: len(obj.upcoming_shows))
 
 
-def partition(items, city, state, container_name):
+def venue_grouper_partition(items, city, state, container_name):
     return [
         {
             city: grouper[0],
@@ -76,4 +76,26 @@ class VenueGrouperSchema(Schema):
 
     @pre_dump(pass_many=True)
     def partition_venues(self, data, many):
-        return partition(data, 'city', 'state', 'venues')
+        return venue_grouper_partition(data, 'city', 'state', 'venues')
+
+
+def venue_search_partition(items, count, container_name):
+    return {
+        count: len(container_name),
+        container_name: [item for item in items],
+    }
+
+
+class VenueSearchSchema(Schema):
+    class Meta:
+        model = Venue
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    count = fields.Function(lambda obj: len(obj['data']))
+    data = fields.List(fields.Nested(VenueThumbnailSchema()))
+
+    @pre_dump(pass_many=False)
+    def partition_venues(self, data, many):
+        return venue_search_partition(data, 'count', 'data')
