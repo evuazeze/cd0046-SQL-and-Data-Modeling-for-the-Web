@@ -2,7 +2,7 @@ from marshmallow import Schema, fields, pre_dump
 from models import *
 
 
-class ShowSchema(Schema):
+class ArtistShowSchema(Schema):
     class Meta:
         model = Show
         include_relationships = True
@@ -12,6 +12,19 @@ class ShowSchema(Schema):
     artist_id = fields.Integer()
     artist_name = fields.Function(lambda obj: obj.artist.name)
     artist_image_link = fields.Function(lambda obj: obj.artist.image_link)
+    start_time = fields.Str()
+
+
+class VenueShowSchema(Schema):
+    class Meta:
+        model = Show
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    venue_id = fields.Integer()
+    venue_name = fields.Function(lambda obj: obj.venue.name)
+    venue_image_link = fields.Function(lambda obj: obj.venue.image_link)
     start_time = fields.Str()
 
 
@@ -34,8 +47,32 @@ class VenueSchema(Schema):
     seeking_description = fields.Str()
     facebook_link = fields.Str()
     genres = fields.Pluck('self', 'name', many=True)
-    past_shows = fields.List(fields.Nested(ShowSchema()))
-    upcoming_shows = fields.List(fields.Nested(ShowSchema()))
+    past_shows = fields.List(fields.Nested(ArtistShowSchema()))
+    upcoming_shows = fields.List(fields.Nested(ArtistShowSchema()))
+    past_shows_count = fields.Function(lambda obj: len(obj.past_shows))
+    upcoming_shows_count = fields.Function(lambda obj: len(obj.upcoming_shows))
+
+
+class ArtistSchema(Schema):
+    class Meta:
+        model = Artist
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    id = fields.Integer()
+    name = fields.Str()
+    city = fields.Str()
+    state = fields.Function(lambda obj: obj.state.name)
+    phone = fields.Str()
+    image_link = fields.Str()
+    website = fields.Str()
+    seeking_venue = fields.Str()
+    seeking_description = fields.Str()
+    facebook_link = fields.Str()
+    genres = fields.Pluck('self', 'name', many=True)
+    past_shows = fields.List(fields.Nested(VenueShowSchema()))
+    upcoming_shows = fields.List(fields.Nested(VenueShowSchema()))
     past_shows_count = fields.Function(lambda obj: len(obj.past_shows))
     upcoming_shows_count = fields.Function(lambda obj: len(obj.upcoming_shows))
 

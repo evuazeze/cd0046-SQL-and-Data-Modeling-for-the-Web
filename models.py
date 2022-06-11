@@ -14,7 +14,7 @@ class State(db.Model):
     __tablename__ = 'states'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    artists = db.relationship('Artist', backref='states', lazy=True)
+    # artists = db.relationship('Artist', backref='states', lazy=True)
     # venues = db.relationship('Venue', backref='states', lazy=True)
 
 
@@ -63,7 +63,13 @@ class Artist(db.Model):
     website = db.Column(db.String)
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.Text)
-    # shows = db.relationship('Show', backref='artists', lazy=True)
+    state = db.relationship('State', backref='artists', lazy=True)
+    past_shows = db.relationship('Show',
+                                 primaryjoin=f"and_(Artist.id == Show.artist_id, cast(Show.start_time, Date) < func.current_date())",
+                                 lazy=True)
+    upcoming_shows = db.relationship('Show',
+                                     primaryjoin=f"and_(Artist.id == Show.artist_id, cast(Show.start_time, Date) > func.current_date())",
+                                     lazy=True)
     genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
 
 
@@ -91,5 +97,6 @@ class Show(db.Model):
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
     artist = db.relationship("Artist", backref='shows', lazy=True)
+    venue = db.relationship("Venue", backref='shows', lazy=True)
     # show_artist = db.relationship("Artist", foreign_keys=[artist_id])
     # artists = db.relationship('Artist', backref=db.backref('shows', lazy=True))
