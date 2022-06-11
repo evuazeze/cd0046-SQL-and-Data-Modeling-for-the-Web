@@ -2,6 +2,21 @@ from marshmallow import Schema, fields, pre_dump
 from models import *
 
 
+class ShowSchema(Schema):
+    class Meta:
+        model = Show
+        include_relationships = True
+        load_instance = True
+        include_fk = True
+
+    venue_id = fields.Integer()
+    venue_name = fields.Function(lambda obj: obj.venue.name)
+    artist_id = fields.Integer()
+    artist_name = fields.Function(lambda obj: obj.artist.name)
+    artist_image_link = fields.Function(lambda obj: obj.artist.image_link)
+    start_time = fields.Str()
+
+
 class ArtistShowSchema(Schema):
     class Meta:
         model = Show

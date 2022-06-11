@@ -405,11 +405,11 @@ def shows():
     data = Show.query \
         .join(Venue, Show.venue_id == Venue.id) \
         .join(Artist, Show.artist_id == Artist.id) \
-        .with_entities(Venue.id.label('venue_id'), Venue.name.label('venue_name'), Artist.id.label('artist_id'),
-                       Artist.name.label('artist_name'), Artist.image_link.label('artist_image_link'),
-                       Show.start_time.label('start_time')).all()
+        .all()
 
-    return render_template('pages/shows.html', shows=data)
+    show_schema = ShowSchema(many=True)
+
+    return render_template('pages/shows.html', shows=show_schema.dump(data))
 
 
 @app.route('/shows/create')
