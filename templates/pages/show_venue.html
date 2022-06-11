@@ -75,7 +75,9 @@
 	</div>
 </section>
 
-<a href="/venues/{{ venue.id }}/edit"><button class="btn btn-primary btn-lg">Edit</button></a>
+    <a href="/venues/{{ venue.id }}/edit"><button class="btn btn-primary btn-lg col-sm-3">Edit</button></a>
+    <a href="/venues/{{ venue.id }}/edit"><button class="btn btn-danger btn-lg col-sm-3" style="margin-left: 10px">Delete</button></a>
+
 
 {% endblock %}
 
