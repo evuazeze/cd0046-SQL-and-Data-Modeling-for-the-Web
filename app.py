@@ -136,6 +136,8 @@ def delete_venue(venue_id):
     error = False
     try:
         venue = Venue.query.get(venue_id)
+        for show in venue.upcoming_shows+venue.past_shows:
+            db.session.delete(show)
         db.session.delete(venue)
         db.session.commit()
     except():
@@ -176,8 +178,11 @@ def search_artists():
 def show_artist(artist_id):
     # shows the artist page with the given artist_id
     artist = db.session.query(Artist).join(Artist.genres).filter(Artist.id == artist_id).first()
+    # print('x: ', artist.upcoming_shows[0].start_time)
     artist_schema = ArtistSchema()
-    return render_template('pages/show_artist.html', artist=artist_schema.dump(artist))
+    x = artist_schema.dump(artist)
+
+    return render_template('pages/show_artist.html', artist=x)
 
 
 #  Update

@@ -54,7 +54,7 @@ class Artist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String)
-    state_id = db.Column(db.Integer, db.ForeignKey('states.id', onupdate="CASCADE"))
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
     phone = db.Column(db.String)
     image_link = db.Column(db.String)
     facebook_link = db.Column(db.String)
