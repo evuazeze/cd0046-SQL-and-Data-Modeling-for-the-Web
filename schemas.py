@@ -77,9 +77,9 @@ class ArtistSchema(Schema):
     upcoming_shows_count = fields.Function(lambda obj: len(obj.upcoming_shows))
 
 
-class VenueThumbnailSchema(Schema):
+class ThumbnailSchema(Schema):
     class Meta:
-        model = Venue
+        models = [Venue, Artist]
         include_relationships = True
         load_instance = True
         include_fk = True
@@ -109,30 +109,30 @@ class VenueGrouperSchema(Schema):
 
     city = fields.Str()
     state = fields.Function(lambda obj: obj['state'].name)
-    venues = fields.List(fields.Nested(VenueThumbnailSchema()))
+    venues = fields.List(fields.Nested(ThumbnailSchema()))
 
     @pre_dump(pass_many=True)
     def partition_venues(self, data, many):
         return venue_grouper_partition(data, 'city', 'state', 'venues')
 
 
-def venue_search_partition(items, count, container_name):
+def search_partition(items, count, container_name):
     return {
         count: len(container_name),
         container_name: [item for item in items],
     }
 
 
-class VenueSearchSchema(Schema):
+class SearchSchema(Schema):
     class Meta:
-        model = Venue
+        models = [Venue, Artist]
         include_relationships = True
         load_instance = True
         include_fk = True
 
     count = fields.Function(lambda obj: len(obj['data']))
-    data = fields.List(fields.Nested(VenueThumbnailSchema()))
+    data = fields.List(fields.Nested(ThumbnailSchema()))
 
     @pre_dump(pass_many=False)
     def partition_venues(self, data, many):
-        return venue_search_partition(data, 'count', 'data')
+        return search_partition(data, 'count', 'data')
