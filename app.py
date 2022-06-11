@@ -193,20 +193,32 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    artist = Artist.query.get(artist_id)
-    form = ArtistForm()
+    error = False
+    try:
+        artist = Artist.query.get(artist_id)
+        form = ArtistForm()
 
-    form.name.data = artist.name
-    form.city.data = artist.city
-    form.state.data = artist.state.name
-    form.state.choices = [(state.name, state.name) for state in State.query.all()]
-    form.phone.data = artist.phone
-    form.genres.data = [genre.name for genre in artist.genres]
-    form.website_link.data = artist.website
-    form.facebook_link.data = artist.facebook_link
-    form.seeking_venue.data = artist.seeking_venue
-    form.seeking_description.data = artist.seeking_description
-    form.image_link.data = artist.image_link
+        form.name.data = artist.name
+        form.city.data = artist.city
+        form.state.data = artist.state.name
+        form.state.choices = [(state.name, state.name) for state in State.query.all()]
+        form.phone.data = artist.phone
+        form.genres.data = [genre.name for genre in artist.genres]
+        form.website_link.data = artist.website
+        form.facebook_link.data = artist.facebook_link
+        form.seeking_venue.data = artist.seeking_venue
+        form.seeking_description.data = artist.seeking_description
+        form.image_link.data = artist.image_link
+    except():
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occurred. Data could not be fetched.')
+        abort(500)
 
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
@@ -215,9 +227,7 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     error = False
     data = {}
-    print('adfa: ', )
     artist = Artist.query.filter_by(id=artist_id).first()
-    # artist = db.session.query(Artist).join(State, State.id == Artist.state_id).filter_by(id=artist_id).first()
     try:
         artist.name = request.form.get('name')
         artist.city = request.form.get('city')
@@ -253,22 +263,34 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    form = VenueForm()
-    venue = {
-        "id": 1,
-        "name": "The Musical Hop",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
-        "facebook_link": "https://www.facebook.com/TheMusicalHop",
-        "seeking_talent": True,
-        "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-        "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-    }
-    # TODO: populate form with values from venue with ID <venue_id>
+    error = False
+    try:
+        venue = Venue.query.get(venue_id)
+        form = VenueForm()
+
+        form.name.data = venue.name
+        form.city.data = venue.city
+        form.state.data = venue.state.name
+        form.address.data = venue.address
+        form.state.choices = [(state.name, state.name) for state in State.query.all()]
+        form.phone.data = venue.phone
+        form.genres.data = [genre.name for genre in venue.genres]
+        form.website_link.data = venue.website
+        form.facebook_link.data = venue.facebook_link
+        form.seeking_talent.data = venue.seeking_talent
+        form.seeking_description.data = venue.seeking_description
+        form.image_link.data = venue.image_link
+    except():
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occurred. Data could not be fetched.')
+        abort(500)
+
     return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 
