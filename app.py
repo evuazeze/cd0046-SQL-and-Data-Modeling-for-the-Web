@@ -213,10 +213,40 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
-    artist = Artist.query.get(artist_id)
-    # artist.name =
+    error = False
+    data = {}
+    print('adfa: ', )
+    artist = Artist.query.filter_by(id=artist_id).first()
+    # artist = db.session.query(Artist).join(State, State.id == Artist.state_id).filter_by(id=artist_id).first()
+    try:
+        artist.name = request.form.get('name')
+        artist.city = request.form.get('city')
+        artist.state = State.query.filter_by(name=request.form.get('state')).first()
+        artist.phone = request.form.get('phone')
+        artist.genres = [Genre.query.filter_by(name=genre).first() for genre in request.form.getlist('genres')]
+        artist.website = request.form.get('website_link')
+        artist.facebook_link = request.form.get('facebook_link')
+        artist.seeking_venue = request.form.get('seeking_venue')
+        artist.seeking_description = request.form.get('seeking_description')
+        artist.image_link = request.form.get('image_link')
+
+        db.session.add(artist)
+        db.session.commit()
+
+        data['id'] = artist.id
+        data['name'] = artist.name
+    except():
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occurred. Artist could not be edited.')
+        abort(500)
+    else:
+        flash('Artist was successfully edited!')
 
     return redirect(url_for('show_artist', artist_id=artist_id))
 
