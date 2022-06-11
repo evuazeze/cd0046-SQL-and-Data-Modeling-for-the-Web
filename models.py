@@ -14,8 +14,6 @@ class State(db.Model):
     __tablename__ = 'states'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    # artists = db.relationship('Artist', backref='states', lazy=True)
-    # venues = db.relationship('Venue', backref='states', lazy=True)
 
 
 venue_genres = db.Table('venue_genres',
@@ -83,12 +81,6 @@ class Genre(db.Model):
         return f'<Genre id: {self.id}, name: {self.name} >'
 
 
-# artist_shows = db.Table('artist_shows',
-#                          db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
-#                          db.Column('show_id', db.Integer, db.ForeignKey('shows.id'), primary_key=True)
-#                          )
-
-
 class Show(db.Model):
     __tablename__ = 'shows'
 
@@ -98,5 +90,3 @@ class Show(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     artist = db.relationship("Artist", backref='shows', lazy=True)
     venue = db.relationship("Venue", backref='shows', lazy=True)
-    # show_artist = db.relationship("Artist", foreign_keys=[artist_id])
-    # artists = db.relationship('Artist', backref=db.backref('shows', lazy=True))
