@@ -236,7 +236,7 @@ def edit_artist_submission(artist_id):
         artist.genres = [Genre.query.filter_by(name=genre).first() for genre in request.form.getlist('genres')]
         artist.website = request.form.get('website_link')
         artist.facebook_link = request.form.get('facebook_link')
-        artist.seeking_venue = request.form.get('seeking_venue')
+        artist.seeking_venue = True if 'seeking_venue' in request.form else False
         artist.seeking_description = request.form.get('seeking_description')
         artist.image_link = request.form.get('image_link')
 
@@ -296,8 +296,40 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
+    error = False
+    data = {}
+    try:
+        venue = Venue.query.filter_by(id=venue_id).first()
+        venue.name = request.form.get('name')
+        venue.address = request.form.get('address')
+        venue.city = request.form.get('city')
+        venue.state = State.query.filter_by(name=request.form.get('state')).first()
+        venue.phone = request.form.get('phone')
+        venue.genres = [Genre.query.filter_by(name=genre).first() for genre in request.form.getlist('genres')]
+        venue.website = request.form.get('website_link')
+        venue.facebook_link = request.form.get('facebook_link')
+        venue.seeking_talent = True if 'seeking_talent' in request.form else False
+        venue.seeking_description = request.form.get('seeking_description')
+        venue.image_link = request.form.get('image_link')
+
+        db.session.add(venue)
+        db.session.commit()
+
+        data['id'] = venue.id
+        data['name'] = venue.name
+    except():
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occurred. Venue could not be edited.')
+        abort(500)
+    else:
+        flash('Venue was successfully edited!')
+
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 
