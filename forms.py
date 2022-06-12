@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from flask_wtf import FlaskForm
 from enums import Genre, State
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
+from wtforms import StringField, SelectField, SelectMultipleField, BooleanField, DateField, DateTimeField, validators
 from wtforms.validators import DataRequired, AnyOf, URL
 
 
@@ -33,8 +33,8 @@ class ShowForm(FlaskForm):
     )
     start_time = DateTimeField(
         'start_time',
-        validators=[DataRequired()],
-        default= datetime.today()
+        default=datetime.today(),
+        validators=[DataRequired()]
     )
 
 
@@ -63,7 +63,7 @@ class VenueForm(FlaskForm):
         choices=Genre.choices()
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[URL(), validators.Optional()]
     )
     website_link = StringField(
         'website_link'
@@ -113,7 +113,7 @@ class ArtistForm(FlaskForm):
         choices=Genre.choices()
      )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[URL(), validators.Optional()]
      )
 
     website_link = StringField(

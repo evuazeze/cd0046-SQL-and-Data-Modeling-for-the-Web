@@ -473,7 +473,8 @@ def create_shows():
 def create_show_submission():
     error = False
     form = ShowForm(request.form)
-
+    if not form.validate():
+        return render_template('forms/new_show.html', form=form)
     try:
         venue = Venue.query.filter_by(id=form.venue_id.data).first()
         artist = Artist.query.filter_by(id=form.artist_id.data).first()
