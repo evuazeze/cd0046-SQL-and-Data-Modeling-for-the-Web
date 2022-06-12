@@ -13,18 +13,6 @@ migrate = Migrate(app, db)
 csrf.init_app(app)
 
 
-class State(db.Model):
-    __tablename__ = 'states'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-
-
-# venue_genres = db.Table('venue_genres',
-#                          db.Column('venue_id', db.Integer, db.ForeignKey('venues.id'), primary_key=True),
-#                          db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
-#                          )
-
-
 class Venue(db.Model):
     __tablename__ = 'venues'
 
@@ -40,15 +28,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String)
     facebook_link = db.Column(db.String)
-    # state = db.relationship('State', backref='venues', lazy=True)
     shows = db.relationship('Show', backref='venues', lazy='joined', cascade="all, delete")
-    # genres = db.relationship('Genre', secondary=venue_genres, backref='venues')
-
-
-artist_genres = db.Table('artist_genres',
-                         db.Column('artist_id', db.Integer, db.ForeignKey('artists.id'), primary_key=True),
-                         db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
-                         )
 
 
 class Artist(db.Model):
@@ -57,26 +37,15 @@ class Artist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String)
-    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+    state = db.Column(db.String, nullable=False)
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     phone = db.Column(db.String)
     image_link = db.Column(db.String)
     facebook_link = db.Column(db.String)
     website = db.Column(db.String)
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.Text)
-    state = db.relationship('State', backref='artists', lazy=True)
     shows = db.relationship('Show', backref='artists', lazy='joined', cascade="all, delete")
-    genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
-
-
-class Genre(db.Model):
-    __tablename__ = 'genres'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-
-    def __repr__(self):
-        return f'<Genre id: {self.id}, name: {self.name} >'
 
 
 class Show(db.Model):
