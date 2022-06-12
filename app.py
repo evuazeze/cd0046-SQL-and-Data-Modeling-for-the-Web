@@ -327,11 +327,10 @@ def edit_venue(venue_id):
 
         form.name.data = venue.name
         form.city.data = venue.city
-        form.state.data = venue.state.name
+        form.state.data = venue.state
         form.address.data = venue.address
-        form.state.choices = [(state.name, state.name) for state in State.query.all()]
         form.phone.data = venue.phone
-        form.genres.data = [genre.name for genre in venue.genres]
+        form.genres.data = venue.genres
         form.website_link.data = venue.website
         form.facebook_link.data = venue.facebook_link
         form.seeking_talent.data = venue.seeking_talent
@@ -354,26 +353,26 @@ def edit_venue(venue_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
     error = False
-    data = {}
+    form = VenueForm(request.form)
+    if not form.validate():
+        return render_template('forms/new_venue.html', form=form)
+
     try:
         venue = Venue.query.filter_by(id=venue_id).first()
-        venue.name = request.form.get('name')
-        venue.address = request.form.get('address')
-        venue.city = request.form.get('city')
-        venue.state = State.query.filter_by(name=request.form.get('state')).first()
-        venue.phone = request.form.get('phone')
-        venue.genres = [Genre.query.filter_by(name=genre).first() for genre in request.form.getlist('genres')]
-        venue.website = request.form.get('website_link')
-        venue.facebook_link = request.form.get('facebook_link')
-        venue.seeking_talent = True if 'seeking_talent' in request.form else False
-        venue.seeking_description = request.form.get('seeking_description')
-        venue.image_link = request.form.get('image_link')
+        venue.name = form.name.data
+        venue.address = form.address.data
+        venue.city = form.city.data
+        venue.state = form.state.data
+        venue.phone = form.phone.data
+        venue.genres = form.genres.data
+        venue.website = form.website_link.data
+        venue.facebook_link = form.facebook_link.data
+        venue.seeking_talent = form.seeking_talent.data
+        venue.seeking_description = form.seeking_description.data
+        venue.image_link = form.image_link.data
 
         db.session.add(venue)
         db.session.commit()
-
-        data['id'] = venue.id
-        data['name'] = venue.name
     except():
         db.session.rollback()
         error = True
