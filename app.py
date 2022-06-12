@@ -206,9 +206,16 @@ def artists():
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
     term = request.form.get('search_term', '')
-    artists = Artist.query.filter(Artist.name.ilike(f'%{term}%')).all()
-    search_schema = SearchSchema()
-    response = search_schema.dump(artists)
+    found_artists = Artist.query.filter(Artist.name.ilike(f'%{term}%')).all()
+    response = {
+            'count': len(found_artists),
+            'data': [{
+                'id': artist.id,
+                'name': artist.name,
+                'num_upcoming_shows': len([show for show in artist.shows if show.start_time > datetime.now()])
+            } for artist in found_artists]
+        }
+
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
