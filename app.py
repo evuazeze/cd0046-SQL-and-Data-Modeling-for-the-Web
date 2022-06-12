@@ -5,7 +5,6 @@ import logging
 
 from flask_moment import Moment
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect
 from flask import (
     Flask,
     render_template,
@@ -19,13 +18,12 @@ from forms import *
 from schemas import *
 
 
-csrf = CSRFProtect()
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
+app.config['WTF_CSRF_ENABLED'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
-csrf.init_app(app)
 
 # ----------------------------------------------------------------------------#
 # Filters.
@@ -79,9 +77,16 @@ def venues():
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
     term = request.form.get('search_term', '')
-    venues = Venue.query.filter(Venue.name.ilike(f'%{term}%')).all()
-    search_schema = SearchSchema()
-    response = search_schema.dump(venues)
+    found_venues = Venue.query.filter(Venue.name.ilike(f'%{term}%')).all()
+    response = {
+            'count': len(found_venues),
+            'data': [{
+                'id': venue.id,
+                'name': venue.name,
+                'num_upcoming_shows': len([show for show in venue.shows if show.start_time > datetime.now()])
+            } for venue in found_venues]
+        }
+
     return render_template('pages/search_venues.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
