@@ -101,34 +101,29 @@ def create_venue_submission():
     # return render_template('forms/new_show.html', form=form)
     error = False
     data = {}
-    try:
-        name = request.form['name']
-        city = request.form['city']
-        state = State.query.filter_by(name=request.form['state']).first()
-        address = request.form['address']
-        phone = request.form['phone']
-        image_link = request.form['image_link']
-        facebook_link = request.form['facebook_link']
-        website_link = request.form['website_link']
-        seeking_talent = True if 'seeking_talent' in request.form else False
-        seeking_description = request.form['seeking_description']
+    form = VenueForm(request.form)
+    if not form.validate():
+        print('errors: ', form.errors)
+        return render_template('forms/new_venue.html', form=form)
 
+    try:
         venue = Venue(
-            name=name,
-            city=city,
-            state_id=state.id,
-            address=address,
-            phone=phone,
-            image_link=image_link,
-            facebook_link=facebook_link,
-            website=website_link,
-            seeking_talent=seeking_talent,
-            seeking_description=seeking_description
+            name=form.name.data,
+            city=form.city.data,
+            state=form.state.data,
+            address=form.address.data,
+            genres=form.genres.data,
+            phone=form.phone.data,
+            image_link=form.image_link.data,
+            facebook_link=form.facebook_link.data,
+            website=form.website_link.data,
+            seeking_talent=form.seeking_talent.data,
+            seeking_description=form.seeking_description.data
         )
 
-        genres = request.form.getlist('genres')
-        genres = [Genre.query.filter_by(name=genre).first() for genre in genres]
-        venue.genres = genres
+        # genres = request.form.getlist('genres')
+        # genres = [Genre.query.filter_by(name=genre).first() for genre in genres]
+        # venue.genres = genres
         db.session.add(venue)
         db.session.commit()
 
