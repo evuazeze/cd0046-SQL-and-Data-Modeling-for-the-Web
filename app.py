@@ -15,7 +15,7 @@ from flask import (
     abort)
 from logging import Formatter, FileHandler
 from forms import *
-from schemas import *
+from models import *
 
 
 app = Flask(__name__)
