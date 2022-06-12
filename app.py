@@ -444,14 +444,22 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
     # displays list of shows at /shows
-    data = Show.query \
-        .join(Venue, Show.venue_id == Venue.id) \
-        .join(Artist, Show.artist_id == Artist.id) \
-        .all()
+    data = Show.query.all()
 
-    show_schema = ShowSchema(many=True)
+    shows = [
+        {
+            'venue_id': show.venue.id,
+            'venue_name': show.venue.name,
+            'artist_id': show.artist.id,
+            'artist_name': show.artist.name,
+            'artist_image_link': show.artist.image_link,
+            'start_time':  show.start_time.strftime("%m/%d/%Y, %H:%M")
+        } for show in data
+    ]
 
-    return render_template('pages/shows.html', shows=show_schema.dump(data))
+    # show_schema = ShowSchema(many=True)
+
+    return render_template('pages/shows.html', shows=shows)
 
 
 @app.route('/shows/create')
@@ -464,12 +472,12 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
     error = False
-    data = {}
+    form = ShowForm(request.form)
 
     try:
-        venue = Venue.query.filter_by(id=request.form['venue_id']).first()
-        artist = Artist.query.filter_by(id=request.form['artist_id']).first()
-        start_time = request.form['start_time']
+        venue = Venue.query.filter_by(id=form.venue_id.data).first()
+        artist = Artist.query.filter_by(id=form.artist_id.data).first()
+        start_time = form.start_time.data
 
         show = Show(
             venue_id=venue.id,
@@ -479,8 +487,6 @@ def create_show_submission():
 
         db.session.add(show)
         db.session.commit()
-
-        data['id'] = show.id
     except():
         db.session.rollback()
         error = True
