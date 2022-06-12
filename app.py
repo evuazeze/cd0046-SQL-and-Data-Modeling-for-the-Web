@@ -1,18 +1,24 @@
-# ----------------------------------------------------------------------------#
-# Imports
-# ----------------------------------------------------------------------------#
-
 import sys
-
-from datetime import datetime
 import dateutil.parser
 import babel
-from flask import render_template, request, flash, redirect, url_for, abort
 import logging
-from logging import Formatter, FileHandler
 
+from flask_moment import Moment
+from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
+from flask import Flask, render_template, request, flash, redirect, url_for, abort
+from logging import Formatter, FileHandler
 from forms import *
 from schemas import *
+
+
+csrf = CSRFProtect()
+app = Flask(__name__)
+moment = Moment(app)
+app.config.from_object('config')
+db.init_app(app)
+migrate = Migrate(app, db)
+csrf.init_app(app)
 
 # ----------------------------------------------------------------------------#
 # Filters.
