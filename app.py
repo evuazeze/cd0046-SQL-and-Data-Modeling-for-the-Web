@@ -4,6 +4,7 @@
 
 import sys
 
+from datetime import datetime
 import dateutil.parser
 import babel
 from flask import render_template, request, flash, redirect, url_for, abort
@@ -60,10 +61,30 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    # shows the venue page with the given venue_id
-    venue = db.session.query(Venue).join(Venue.genres).filter(Venue.id == venue_id).first()
-    venue_schema = VenueSchema()
-    return render_template('pages/show_venue.html', venue=venue_schema.dump(venue))
+    venue = Venue.query.get_or_404(venue_id)
+    past_shows = []
+    upcoming_shows = []
+
+    for show in venue.shows:
+        temp_show = {
+            'artist_id': show.artist_id,
+            'artist_name': show.artist.name,
+            'artist_image_link': show.artist.image_link,
+            'start_time': show.start_time.strftime('%m/%d/%Y, %H:%M')
+        }
+        if show.start_time <= datetime.now():
+            past_shows.append(temp_show)
+        else:
+            upcoming_shows.append(temp_show)
+
+    data = vars(venue)
+
+    data['past_shows'] = past_shows
+    data['upcoming_shows'] = upcoming_shows
+    data['past_shows_count'] = len(past_shows)
+    data['upcoming_shows_count'] = len(upcoming_shows)
+
+    return render_template('pages/show_venue.html', venue=data)
 
 
 #  Create Venue
@@ -176,13 +197,30 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # shows the artist page with the given artist_id
-    artist = db.session.query(Artist).join(Artist.genres).filter(Artist.id == artist_id).first()
-    # print('x: ', artist.upcoming_shows[0].start_time)
-    artist_schema = ArtistSchema()
-    x = artist_schema.dump(artist)
+    artist = Artist.query.get_or_404(artist_id)
+    past_shows = []
+    upcoming_shows = []
 
-    return render_template('pages/show_artist.html', artist=x)
+    for show in artist.shows:
+        temp_show = {
+            'venue_id': show.venue_id,
+            'venue_name': show.venue.name,
+            'venue_image_link': show.venue.image_link,
+            'start_time': show.start_time.strftime('%m/%d/%Y, %H:%M')
+        }
+        if show.start_time <= datetime.now():
+            past_shows.append(temp_show)
+        else:
+            upcoming_shows.append(temp_show)
+
+    data = vars(artist)
+
+    data['past_shows'] = past_shows
+    data['upcoming_shows'] = upcoming_shows
+    data['past_shows_count'] = len(past_shows)
+    data['upcoming_shows_count'] = len(upcoming_shows)
+
+    return render_template('pages/show_artist.html', artist=data)
 
 
 #  Update

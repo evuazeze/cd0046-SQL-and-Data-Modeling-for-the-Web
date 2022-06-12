@@ -37,8 +37,7 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String)
     facebook_link = db.Column(db.String)
     state = db.relationship('State', backref='venues', lazy=True)
-    past_shows = db.relationship('Show', primaryjoin=f"and_(Venue.id == Show.venue_id, cast(Show.start_time, Date) < func.current_date())", lazy=True)
-    upcoming_shows = db.relationship('Show', primaryjoin=f"and_(Venue.id == Show.venue_id, cast(Show.start_time, Date) > func.current_date())", lazy=True)
+    shows = db.relationship('Show', backref='venues', lazy='joined', cascade="all, delete")
     genres = db.relationship('Genre', secondary=venue_genres, backref='venues')
 
 
@@ -62,12 +61,7 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.Text)
     state = db.relationship('State', backref='artists', lazy=True)
-    past_shows = db.relationship('Show',
-                                 primaryjoin=f"and_(Artist.id == Show.artist_id, cast(Show.start_time, Date) < func.current_date())",
-                                 lazy=True)
-    upcoming_shows = db.relationship('Show',
-                                     primaryjoin=f"and_(Artist.id == Show.artist_id, cast(Show.start_time, Date) > func.current_date())",
-                                     lazy=True)
+    shows = db.relationship('Show', backref='artists', lazy='joined', cascade="all, delete")
     genres = db.relationship('Genre', secondary=artist_genres, backref=db.backref('artists', lazy=True))
 
 
@@ -88,5 +82,5 @@ class Show(db.Model):
     venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
-    artist = db.relationship("Artist", backref='shows', lazy=True)
-    venue = db.relationship("Venue", backref='shows', lazy=True)
+    artist = db.relationship("Artist", lazy='joined')
+    venue = db.relationship("Venue", lazy='joined')
