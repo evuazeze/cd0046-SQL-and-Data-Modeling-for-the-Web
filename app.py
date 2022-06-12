@@ -175,8 +175,6 @@ def delete_venue(venue_id):
     error = False
     try:
         venue = Venue.query.get(venue_id)
-        for show in venue.upcoming_shows+venue.past_shows:
-            db.session.delete(show)
         db.session.delete(venue)
         db.session.commit()
     except():
