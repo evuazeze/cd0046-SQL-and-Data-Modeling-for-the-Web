@@ -257,10 +257,9 @@ def edit_artist(artist_id):
 
         form.name.data = artist.name
         form.city.data = artist.city
-        form.state.data = artist.state.name
-        form.state.choices = [(state.name, state.name) for state in State.query.all()]
+        form.state.data = artist.state
         form.phone.data = artist.phone
-        form.genres.data = [genre.name for genre in artist.genres]
+        form.genres.data = artist.genres
         form.website_link.data = artist.website
         form.facebook_link.data = artist.facebook_link
         form.seeking_venue.data = artist.seeking_venue
@@ -283,25 +282,25 @@ def edit_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
     error = False
-    data = {}
+    form = ArtistForm(request.form)
+    if not form.validate():
+        return render_template('forms/new_artist.html', form=form)
+
     artist = Artist.query.filter_by(id=artist_id).first()
     try:
-        artist.name = request.form.get('name')
-        artist.city = request.form.get('city')
-        artist.state = State.query.filter_by(name=request.form.get('state')).first()
-        artist.phone = request.form.get('phone')
-        artist.genres = [Genre.query.filter_by(name=genre).first() for genre in request.form.getlist('genres')]
-        artist.website = request.form.get('website_link')
-        artist.facebook_link = request.form.get('facebook_link')
-        artist.seeking_venue = True if 'seeking_venue' in request.form else False
-        artist.seeking_description = request.form.get('seeking_description')
-        artist.image_link = request.form.get('image_link')
+        artist.name = form.name.data
+        artist.city = form.city.data
+        artist.state = form.state.data
+        artist.phone = form.phone.data
+        artist.genres = form.genres.data
+        artist.website = form.website_link.data
+        artist.facebook_link = form.facebook_link.data
+        artist.seeking_venue = form.seeking_venue.data
+        artist.seeking_description = form.seeking_description.data
+        artist.image_link = form.image_link.data
 
         db.session.add(artist)
         db.session.commit()
-
-        data['id'] = artist.id
-        data['name'] = artist.name
     except():
         db.session.rollback()
         error = True
