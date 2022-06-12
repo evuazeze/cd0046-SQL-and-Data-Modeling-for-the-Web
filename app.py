@@ -6,7 +6,14 @@ import logging
 from flask_moment import Moment
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
-from flask import Flask, render_template, request, flash, redirect, url_for, abort
+from flask import (
+    Flask,
+    render_template,
+    request,
+    flash,
+    redirect,
+    url_for,
+    abort)
 from logging import Formatter, FileHandler
 from forms import *
 from schemas import *
@@ -23,6 +30,7 @@ csrf.init_app(app)
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
+
 
 def format_datetime(value, format='medium'):
     date = dateutil.parser.parse(value)
@@ -50,9 +58,22 @@ def index():
 
 @app.route('/venues')
 def venues():
-    distinct_venues = db.session.query(Venue).join(State, Venue.state_id == State.id).distinct(Venue.id, Venue.city, State.name).all()
-    venue_grouper_schema = VenueGrouperSchema(many=True)
-    return render_template('pages/venues.html', areas=venue_grouper_schema.dump(distinct_venues))
+    locals = []
+    venues = Venue.query.all()
+
+    places = Venue.query.distinct(Venue.city, Venue.state).all()
+
+    for place in places:
+        locals.append({
+            'city': place.city,
+            'state': place.state,
+            'venues': [{
+                'id': venue.id,
+                'name': venue.name,
+                'num_upcoming_shows': len([show for show in venue.shows if show.start_time > datetime.now()])
+            } for venue in venues if venue.city == place.city and venue.state == place.state]
+        })
+    return render_template('pages/venues.html', areas=locals)
 
 
 @app.route('/venues/search', methods=['POST'])
